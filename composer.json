@@ -14,5 +14,8 @@
             "email": "hello@sahilbuddhadev.me"
         }
     ],
-    "require": {}
+    "require": {
+        "php": "^8.0.2",
+        "laravel/framework": "^9.19"
+    }
 }

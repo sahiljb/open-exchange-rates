@@ -7,8 +7,11 @@ use App\Http\Controllers\Controller;
 /**
  * A Laravel package for currency conversation from openexchangerates.org
  *
+ * @package     OpenExchangeRates
  * @link        https://openexchangerates.org/
  * @author      Sahil Buddhadev <hello@sahilbuddhadev.me>
+ * @license     MIT
+ * @access      public
  * @version     0.0.1
  */
 
@@ -22,6 +25,7 @@ class OpenExchangeRates extends Controller
     public string $baseCurrency;
     public array $symbols;
     public array $parameters;
+    public int $rounding;
 
     public function __construct(string $appID)
     {
@@ -37,6 +41,7 @@ class OpenExchangeRates extends Controller
         $this->baseCurrency         = 'USD';
         $this->symbols              = [];
         $this->parameters['app_id'] = $this->appID;
+        $this->rounding             = 4;
     }
 
     /**
@@ -133,7 +138,7 @@ class OpenExchangeRates extends Controller
         $convert_amount = $amount * ($usd_to_to / $usd_to_from);
 
         return array(
-            'price' => round($convert_amount, 2)
+            'price' => round($convert_amount, $this->rounding)
         );
     }
 }
