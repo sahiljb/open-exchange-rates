@@ -20,9 +20,9 @@ class OpenExchangeRates extends Controller
     private string $api_url;
     private array $end_points;
     private string $appID;
+    private string $baseCurrency;
 
     public bool $returnJSON;
-    public string $baseCurrency;
     public array $symbols;
     public array $parameters;
     public int $rounding;
@@ -42,6 +42,18 @@ class OpenExchangeRates extends Controller
         $this->symbols              = [];
         $this->parameters['app_id'] = $this->appID;
         $this->rounding             = 4;
+        $this->setBaseCurrency();
+    }
+
+    /**
+     * Set base currency price
+     *
+     * @param string $currency
+     * @return void
+     */
+    public function setBaseCurrency( string $currency = '' ): void
+    {
+        $this->baseCurrency = empty($currency) ? 'USD' : strtoupper($currency);
     }
 
     /**
@@ -54,16 +66,28 @@ class OpenExchangeRates extends Controller
      */
     private function _make_call(string $endpoint, array $parameters = array(), bool $json = false): mixed
     {
+        $request_url = $this->api_url . $this->end_points[$endpoint] . '?' . http_build_query(array_filter($parameters));
+
+        $ch = curl_init();
+        $timeout = 30;
+
+        curl_setopt($ch,CURLOPT_URL, $request_url);
+        curl_setopt($ch,CURLOPT_RETURNTRANSFER,1);
+        curl_setopt($ch,CURLOPT_CONNECTTIMEOUT,$timeout);
+
+        $response = curl_exec($ch);
+
+        curl_close($ch);
+
         if ($json):
-            return file_get_contents( $this->api_url . $this->end_points[$endpoint] . '?' . http_build_query($parameters) );
+            return $response;
         else:
-            return json_decode( file_get_contents( $this->api_url . $this->end_points[$endpoint] . '?' . http_build_query($parameters) ) );
+            return json_decode( $response );
         endif;
     }
 
     private function _usages_checking()
     {
-
     }
 
     /**
@@ -109,7 +133,7 @@ class OpenExchangeRates extends Controller
         $rates = $this->getRates();
         $rates = $rates->rates;
 
-        return $rates->{$currency};
+        return $rates->{strtoupper($currency)};
     }
 
     /**
@@ -141,5 +165,27 @@ class OpenExchangeRates extends Controller
             'price' => round($convert_amount, $this->rounding)
         );
     }
-}
 
+    /**
+     * Get exchange rates based on new base currency
+     *
+     * @return array
+     */
+    public function getRatesFromBase(): array
+    {
+        $base_currency = $this->baseCurrency;
+        $converted_rates = array(
+            'base_currency' => $base_currency
+        );
+        $currencies = $this->getCurrencies();
+
+        $usd_based_rates = $this->getRates();
+
+        foreach ( $currencies as $currency => $currency_name ):
+            if( !empty($usd_based_rates->rates->$currency) )
+                $converted_rates['rates'][$currency] = round(1 * ( $usd_based_rates->rates->$currency / $usd_based_rates->rates->$base_currency ), $this->rounding);
+        endforeach;
+
+        return $converted_rates;
+    }
+}
