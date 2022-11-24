@@ -161,19 +161,18 @@ class OpenExchangeRates extends Controller
      */
     public function convert(float $amount, string $from, string $to): array
     {
-        $usd_to_from    = (array) $this->getRate(strtoupper($from));
+        $usd_to_from = $this->getRate(strtoupper($from));
 
-        if ( isset($usd_to_from['error']) ) {
-            return $usd_to_from;
-        } else {
+        if ( isset($usd_to_from['error']) ):
+            return (array) $usd_to_from;
+        else:
             $usd_to_to      = $this->getRate(strtoupper($to));
-
             $convert_amount = $amount * ($usd_to_to / $usd_to_from);
 
             return array(
                 'price' => round($convert_amount, $this->rounding)
             );
-        }
+        endif;
     }
 
     /**
