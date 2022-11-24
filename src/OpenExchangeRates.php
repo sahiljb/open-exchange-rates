@@ -131,9 +131,14 @@ class OpenExchangeRates extends Controller
     public function getRate(string $currency): mixed
     {
         $rates = $this->getRates();
-        $rates = $rates->rates;
 
-        return $rates->{strtoupper($currency)};
+        if ( isset($rates->error) ) {
+            return $rates;
+        } else {
+            $rates = $rates->rates;
+
+            return $rates->{strtoupper($currency)};
+        }
     }
 
     /**
@@ -156,14 +161,19 @@ class OpenExchangeRates extends Controller
      */
     public function convert(float $amount, string $from, string $to): array
     {
-        $usd_to_from    = $this->getRate(strtoupper($from));
-        $usd_to_to      = $this->getRate(strtoupper($to));
+        $usd_to_from    = (array) $this->getRate(strtoupper($from));
 
-        $convert_amount = $amount * ($usd_to_to / $usd_to_from);
+        if ( isset($usd_to_from['error']) ) {
+            return $usd_to_from;
+        } else {
+            $usd_to_to      = $this->getRate(strtoupper($to));
 
-        return array(
-            'price' => round($convert_amount, $this->rounding)
-        );
+            $convert_amount = $amount * ($usd_to_to / $usd_to_from);
+
+            return array(
+                'price' => round($convert_amount, $this->rounding)
+            );
+        }
     }
 
     /**
