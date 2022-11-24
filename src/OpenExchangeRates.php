@@ -163,7 +163,7 @@ class OpenExchangeRates extends Controller
     {
         $usd_to_from = $this->getRate(strtoupper($from));
 
-        if ( isset($usd_to_from['error']) ):
+        if ( isset($usd_to_from->error) ):
             return (array) $usd_to_from;
         else:
             $usd_to_to      = $this->getRate(strtoupper($to));
