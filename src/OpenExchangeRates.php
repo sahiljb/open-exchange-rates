@@ -125,10 +125,10 @@ class OpenExchangeRates extends Controller
     /**
      * Get specific currency rate
      *
-     * @param string $currency
+     * @param array $currency
      * @return mixed
      */
-    public function getRate(string $currency): mixed
+    public function getRate(array $currency): mixed
     {
         $rates = $this->getRates();
 
@@ -136,6 +136,13 @@ class OpenExchangeRates extends Controller
             return $rates;
         } else {
             $rates = $rates->rates;
+
+            implode(",", $currency);
+
+            $currency_data = array(
+                $rates->{strtoupper($currency[0])},
+                $rates->{strtoupper($currency[1])}
+            );
 
             return $rates->{strtoupper($currency)};
         }
@@ -161,12 +168,18 @@ class OpenExchangeRates extends Controller
      */
     public function convert(float $amount, string $from, string $to): array
     {
-        $usd_to_from = $this->getRate(strtoupper($from));
+        $currencies = array(
+            $from,
+            $to
+        );
+        $currencies_current_rate = $this->getRate($currencies);
+
+        $usd_to_from = $currencies_current_rate[0];
 
         if ( isset($usd_to_from->error) ):
             return (array) $usd_to_from;
         else:
-            $usd_to_to      = $this->getRate(strtoupper($to));
+            $usd_to_to      = $currencies_current_rate[1];
             $convert_amount = $amount * ($usd_to_to / $usd_to_from);
 
             return array(
