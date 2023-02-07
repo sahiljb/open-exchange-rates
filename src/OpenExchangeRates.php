@@ -144,7 +144,7 @@ class OpenExchangeRates extends Controller
                 $rates->{strtoupper($currency[1])}
             );
 
-            return $rates->{strtoupper($currency)};
+            return $rates->{strtoupper($currency_data)};
         }
     }
 
